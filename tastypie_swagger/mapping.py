@@ -139,7 +139,7 @@ class ResourceSwaggerMapping(object):
                 parameters.append(self.build_parameter(
                     name=name,
                     dataType=field['type'],
-                    required=field['nullable'],
+                    required=not field['nullable'],
                     description=force_text(field['help_text']),
                 ))
         return parameters
@@ -449,8 +449,8 @@ class ResourceSwaggerMapping(object):
                     field.get('type'),
                     # note: 'help_text' is a Django proxy which must be wrapped
                     # in unicode *specifically* to get the actual help text.
-                    force_text(field.get('help_text', '')),
-                    field.get('nullable')
+                    description=force_text(field.get('help_text', '')),
+                    required=not field.get('nullable')
                 )
             )
         return properties
