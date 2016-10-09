@@ -1274,6 +1274,9 @@ helpers = this.merge(helpers, Handlebars.helpers); data = data || {};
 
     SwaggerUi.prototype.updateSwaggerUi = function(data) {
       this.options.url = data.url;
+      if(data.apiKey != null){
+        this.options.apiKey = data.apiKey;
+      }
       return this.load();
     };
 

@@ -87,6 +87,7 @@ var SwaggerApi = function(url, options) {
   this.authorizationScheme = null;
   this.info = null;
   this.useJQuery = false;
+  this.apikey = null;
 
   options = (options||{});
   if (url)
@@ -99,6 +100,9 @@ var SwaggerApi = function(url, options) {
 
   if (options.url != null)
     this.url = options.url;
+
+  if (options.apiKey != null)
+    this.apikey = options.apiKey;
 
   if (options.success != null)
     this.success = options.success;
@@ -321,6 +325,7 @@ var SwaggerResource = function(resourceObj, api) {
   var _this = this;
   this.api = api;
   this.api = this.api;
+  this.apikey = this.api.apikey;
   consumes = (this.consumes | []);
   produces = (this.produces | []);
   this.path = this.api.resourcePath != null ? this.api.resourcePath : resourceObj.path;
@@ -478,7 +483,7 @@ SwaggerResource.prototype.addOperations = function(resource_path, ops, consumes,
         }
       }
       o.nickname = this.sanitize(o.nickname);
-      op = new SwaggerOperation(o.nickname, resource_path, method, o.parameters, o.summary, o.notes, type, responseMessages, this, consumes, produces, o.authorizations);
+      op = new SwaggerOperation(o.nickname, resource_path, method, o.parameters, o.summary, o.notes, type, responseMessages, this, consumes, produces, o.authorizations, this.apikey);
       this.operations[op.nickname] = op;
       output.push(this.operationsArray.push(op));
     }
@@ -668,7 +673,7 @@ SwaggerModelProperty.prototype.toString = function() {
   return str;
 };
 
-var SwaggerOperation = function(nickname, path, method, parameters, summary, notes, type, responseMessages, resource, consumes, produces, authorizations) {
+var SwaggerOperation = function(nickname, path, method, parameters, summary, notes, type, responseMessages, resource, consumes, produces, authorizations, apikey) {
   var _this = this;
 
   var errors = [];
@@ -684,6 +689,7 @@ var SwaggerOperation = function(nickname, path, method, parameters, summary, not
   this.consumes = consumes;
   this.produces = produces;
   this.authorizations = authorizations;
+  this.apikey = apikey;
   this["do"] = __bind(this["do"], this);
 
   if (errors.length > 0)
@@ -895,7 +901,7 @@ SwaggerOperation.prototype["do"] = function(args, opts, callback, error) {
     }
   }
 
-  req = new SwaggerRequest(this.method, this.urlify(args), params, opts, callback, error, this);
+  req = new SwaggerRequest(this.method, this.urlify(args), params, opts, callback, error, this, null, this.apikey);
   if (opts.mock != null) {
     return req;
   } else {
@@ -1079,7 +1085,7 @@ SwaggerOperation.prototype.formatXml = function(xml) {
   return formatted;
 };
 
-var SwaggerRequest = function(type, url, params, opts, successCallback, errorCallback, operation, execution) {
+var SwaggerRequest = function(type, url, params, opts, successCallback, errorCallback, operation, execution, apikey) {
   var _this = this;
   var errors = [];
   this.useJQuery = (typeof operation.resource.useJQuery !== 'undefined' ? operation.resource.useJQuery : null);
@@ -1092,6 +1098,7 @@ var SwaggerRequest = function(type, url, params, opts, successCallback, errorCal
   this.operation = (operation||errors.push("SwaggerRequest operation is required."));
   this.execution = execution;
   this.headers = (params.headers||{});
+  this.apikey = apikey;
 
   if(errors.length > 0) {
     throw errors;
@@ -1101,6 +1108,9 @@ var SwaggerRequest = function(type, url, params, opts, successCallback, errorCal
 
   // set request, response content type headers
   var headers = this.setHeaders(params, this.operation);
+  if (this.apikey != null) {
+    headers['Authorization'] = 'ApiKey ' + this.apikey;
+  }
   var body = params.body;
 
   // encode the body for form submits
