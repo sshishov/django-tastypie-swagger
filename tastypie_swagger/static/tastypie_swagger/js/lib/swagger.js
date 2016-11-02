@@ -332,7 +332,7 @@ var SwaggerResource = function(resourceObj, api) {
   this.description = resourceObj.description;
 
   var parts = this.path.split("/");
-  this.name = parts[parts.length - 1].replace('.{format}', '');
+  this.name = parts[parts.length - 2].replace('.{format}', '');
   this.basePath = this.api.basePath;
   this.operations = {};
   this.operationsArray = [];
@@ -1109,7 +1109,7 @@ var SwaggerRequest = function(type, url, params, opts, successCallback, errorCal
   // set request, response content type headers
   var headers = this.setHeaders(params, this.operation);
   if (this.apikey != null) {
-    headers['Authorization'] = 'ApiKey ' + this.apikey;
+    headers['X-Auth-Token'] = 'adenity ' + this.apikey;
   }
   var body = params.body;
 
